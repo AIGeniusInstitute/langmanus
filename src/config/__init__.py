@@ -50,7 +50,7 @@ TEAM_MEMBER_CONFIGRATIONS = {
             "Executes Python or Bash commands, performs mathematical calculations, and outputs a Markdown report. "
             "Must be used for all mathematical computations."
         ),
-        "is_optional": False,
+        "is_optional": True,
     },
     "browser": {
         "name": "browser",

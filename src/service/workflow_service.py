@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import uuid
+from ast import literal_eval
 from typing import Dict, List, Any, Generator, Optional
 
 from langchain_community.adapters.openai import convert_message_to_dict
@@ -130,6 +131,71 @@ async def run_agent_workflow(
         yield final_event
 
 
+class Command:
+    def __init__(self, update, goto):
+        self.update = update
+        self.goto = goto
+
+
+def parse_content(data):
+    text = ""
+    # 处理 Command 类型的数据
+    if isinstance(data, Command) and hasattr(data, 'update') and "messages" in data.update:
+        messages = data.update["messages"]
+        for message in messages:
+            if hasattr(message, 'content'):
+                text += f"{message.content}{getattr(message, 'additional_kwargs', {}).get('reasoning_content', '')}"
+            else:
+                text += str(message)
+    # 处理普通字典类型的数据
+    elif isinstance(data, dict):
+        if "chunk" in data:
+            chunk = data["chunk"]
+            if hasattr(chunk, 'content'):
+                text = f"{chunk.content}{getattr(chunk, 'additional_kwargs', {}).get('reasoning_content', '')}"
+            else:
+                text = str(chunk)
+
+        if "output" in data:
+            output = data["output"]
+            if hasattr(output, 'content'):
+                text = f"{output.content}{getattr(output, 'additional_kwargs', {}).get('reasoning_content', '')}"
+            else:
+                text = str(output)
+
+        if "messages" in data:
+            messages = data["messages"]
+            for message in messages:
+                if hasattr(message, 'content'):
+                    text += f"{message.content}{getattr(message, 'additional_kwargs', {}).get('reasoning_content', '')}"
+                else:
+                    text += str(message)
+
+                # 检查是否为 AIMessage 类型
+                if isinstance(message, dict) and message.get('name') == 'python_repl_tool':
+                    tool_calls = message.get('additional_kwargs', {}).get('tool_calls', [])
+
+                    # 遍历有效 tool_calls
+                    for tool_call in tool_calls:
+                        if tool_call.get('type') == 'function':
+                            function = tool_call.get('function', {})
+                            arguments_str = function.get('arguments', '')
+
+                            try:
+                                # 解析 arguments 字符串
+                                arguments_dict = literal_eval(arguments_str)
+                                raw_code = arguments_dict.get('code', '')
+
+                                # 提取实际代码内容
+                                code_content = raw_code.strip().strip('```').strip()
+                                text += code_content
+
+                            except Exception as e:
+                                print(f"Error parsing code: {str(e)}")
+
+    return text
+
+
 def _extract_event_data(
         event: Dict[str, Any],
 ) -> tuple[str, Dict[str, Any], str, str, str, str]:
@@ -151,30 +217,8 @@ def _extract_event_data(
     if event.get("run_id") is not None:
         run_id = str(event["run_id"])
 
-    text = ""
-    if data and "chunk" in data:
-        chunk = data["chunk"]
-
-        if hasattr(chunk, 'content'):
-            text = f"{chunk.content}{getattr(chunk, 'additional_kwargs', {}).get('reasoning_content', '')}"
-        else:
-            text = str(chunk)
-
-    if data and "output" in data:
-        output = data["output"]
-        if hasattr(output, 'content'):
-            text = f"{output.content}{getattr(output, 'additional_kwargs', {}).get('reasoning_content', '')}"
-        else:
-            text = str(output)
-
-    if data and "messages" in data:
-        output = data["messages"]
-        if hasattr(output, 'content'):
-            text = f"{output.content}{getattr(output, 'additional_kwargs', {}).get('reasoning_content', '')}"
-        else:
-            text = str(output)
-
-    print(text, end='')
+    # print data
+    print(parse_content(data), end='')
 
     return kind, data, name, node, langgraph_step, run_id
 
