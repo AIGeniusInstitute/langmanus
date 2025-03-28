@@ -102,6 +102,9 @@ def create_litellm_model(
     Support various different model's through LiteLLM's capabilities.
     """
 
+    print("=========== create_litellm_model ==============")
+    print(kwargs)
+
     llm_kwargs = {"model": model, "temperature": temperature, **kwargs}
 
     if base_url:  # This will handle None or empty string
@@ -169,6 +172,7 @@ def _create_llm_use_env(
                 api_key=AZURE_API_KEY,
             )
         elif is_litellm_model(BASIC_MODEL):
+            print("===== use litellm ====")
             llm = create_litellm_model(
                 model=BASIC_MODEL,
                 base_url=BASIC_BASE_URL,
@@ -212,6 +216,10 @@ def _create_llm_use_conf(llm_type: LLMType, conf: Dict[str, Any]) -> ChatLiteLLM
         "vision": conf.get("VISION_MODEL"),
     }
     llm_conf = llm_type_map.get(llm_type)
+
+    print("============= _create_llm_use_conf ==============")
+    print(llm_conf)
+
     if not llm_conf:
         raise ValueError(f"Unknown LLM type: {llm_type}")
     if not isinstance(llm_conf, dict):

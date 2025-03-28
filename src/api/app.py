@@ -179,6 +179,9 @@ async def get_team_members():
         dict: A dictionary containing team member configurations
     """
     try:
+
+        print(TEAM_MEMBER_CONFIGRATIONS)
+
         return {"team_members": TEAM_MEMBER_CONFIGRATIONS}
     except Exception as e:
         logger.error(f"Error getting team members: {e}")

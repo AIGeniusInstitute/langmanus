@@ -12,7 +12,7 @@ from langchain_core.messages import (
 
 
 def _convert_delta_to_message_chunk(
-    _dict: Mapping[str, Any], default_class: Type[BaseMessageChunk]
+        _dict: Mapping[str, Any], default_class: Type[BaseMessageChunk]
 ) -> BaseMessageChunk:
     role = _dict.get("role")
     content = _dict.get("content") or ""
@@ -96,13 +96,13 @@ def _is_pydantic_class(obj: Any) -> bool:
 
 class ChatLiteLLMV2(ChatLiteLLM):
     def with_structured_output(
-        self,
-        schema: Optional[_DictOrPydanticClass] = None,
-        *,
-        method: Literal["function_calling", "json_mode"] = "function_calling",
-        include_raw: bool = False,
-        strict: Optional[bool] = None,
-        **kwargs: Any,
+            self,
+            schema: Optional[_DictOrPydanticClass] = None,
+            *,
+            method: Literal["function_calling", "json_mode"] = "function_calling",
+            include_raw: bool = False,
+            strict: Optional[bool] = None,
+            **kwargs: Any,
     ) -> Runnable[LanguageModelInput, _DictOrPydantic]:
         if kwargs:
             raise ValueError(f"Received unsupported arguments {kwargs}")

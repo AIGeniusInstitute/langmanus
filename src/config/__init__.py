@@ -50,7 +50,7 @@ TEAM_MEMBER_CONFIGRATIONS = {
             "Executes Python or Bash commands, performs mathematical calculations, and outputs a Markdown report. "
             "Must be used for all mathematical computations."
         ),
-        "is_optional": True,
+        "is_optional": False,
     },
     "browser": {
         "name": "browser",
@@ -59,7 +59,7 @@ TEAM_MEMBER_CONFIGRATIONS = {
             "Directly interacts with web pages, performing complex operations and interactions. "
             "You can also leverage `browser` to perform in-domain search, like Facebook, Instgram, Github, etc."
         ),
-        "is_optional": True,
+        "is_optional": False,
     },
     "reporter": {
         "name": "reporter",

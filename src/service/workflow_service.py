@@ -151,6 +151,8 @@ def _extract_event_data(
     if event.get("run_id") is not None:
         run_id = str(event["run_id"])
 
+    print(data)
+
     return kind, data, name, node, langgraph_step, run_id
 
 
