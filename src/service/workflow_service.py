@@ -1,13 +1,13 @@
 import asyncio
 import logging
+import uuid
 from typing import Dict, List, Any, Generator, Optional
 
-from src.config import TEAM_MEMBERS, TEAM_MEMBER_CONFIGRATIONS
-from src.graph import build_graph
 from langchain_community.adapters.openai import convert_message_to_dict
-from src.constants import STREAMING_LLM_AGENTS, EventType
-import uuid
 
+from src.config import TEAM_MEMBERS, TEAM_MEMBER_CONFIGRATIONS
+from src.constants import STREAMING_LLM_AGENTS, EventType
+from src.graph import build_graph
 from src.tools import browser_tool
 
 # Configure logging
@@ -32,12 +32,12 @@ current_browser_tool: Optional[browser_tool] = None
 
 
 async def run_agent_workflow(
-    user_input_messages: list,
-    debug: Optional[bool] = False,
-    deep_thinking_mode: Optional[bool] = False,
-    search_before_planning: Optional[bool] = False,
-    team_members: Optional[list] = None,
-    thread_id: Optional[str] = "default",
+        user_input_messages: list,
+        debug: Optional[bool] = False,
+        deep_thinking_mode: Optional[bool] = False,
+        search_before_planning: Optional[bool] = False,
+        team_members: Optional[list] = None,
+        thread_id: Optional[str] = "default",
 ):
     """Run the agent workflow to process and respond to user input messages.
 
@@ -83,34 +83,34 @@ async def run_agent_workflow(
 
     try:
         async for event in graph.astream_events(
-            {
-                # Constants
-                "TEAM_MEMBERS": team_members,
-                "TEAM_MEMBER_CONFIGRATIONS": TEAM_MEMBER_CONFIGRATIONS,
-                # Runtime Variables
-                # TODO: history should be stored in backend, frontend only needs to send the use inputs.
-                "messages": [user_input_messages[-1]],
-                "deep_thinking_mode": deep_thinking_mode,
-                "search_before_planning": search_before_planning,
-            },
-            # client could send this param to talk with a specific thread.
-            config={"configurable": {"thread_id": thread_id}},
-            version="v2",
+                {
+                    # Constants
+                    "TEAM_MEMBERS": team_members,
+                    "TEAM_MEMBER_CONFIGRATIONS": TEAM_MEMBER_CONFIGRATIONS,
+                    # Runtime Variables
+                    # TODO: history should be stored in backend, frontend only needs to send the use inputs.
+                    "messages": [user_input_messages[-1]],
+                    "deep_thinking_mode": deep_thinking_mode,
+                    "search_before_planning": search_before_planning,
+                },
+                # client could send this param to talk with a specific thread.
+                config={"configurable": {"thread_id": thread_id}},
+                version="v2",
         ):
             kind, data, name, node, langgraph_step, run_id = _extract_event_data(event)
             last_event_data = data
 
             # Process events and generate output data
             for ydata in _process_event(
-                kind,
-                data,
-                name,
-                node,
-                workflow_id,
-                langgraph_step,
-                run_id,
-                user_input_messages,
-                team_members,
+                    kind,
+                    data,
+                    name,
+                    node,
+                    workflow_id,
+                    langgraph_step,
+                    run_id,
+                    user_input_messages,
+                    team_members,
             ):
                 if ydata:
                     if ydata.get("event") == "start_of_workflow":
@@ -125,13 +125,13 @@ async def run_agent_workflow(
 
     # Handle workflow completion - Fix for using yield from in async functions
     for final_event in _generate_final_events(
-        workflow_id, last_event_data, is_workflow_triggered
+            workflow_id, last_event_data, is_workflow_triggered
     ):
         yield final_event
 
 
 def _extract_event_data(
-    event: Dict[str, Any],
+        event: Dict[str, Any],
 ) -> tuple[str, Dict[str, Any], str, str, str, str]:
     """Extract key data from events"""
     kind = event.get("event")
@@ -151,21 +151,44 @@ def _extract_event_data(
     if event.get("run_id") is not None:
         run_id = str(event["run_id"])
 
-    print(data)
+    text = ""
+    if data and "chunk" in data:
+        chunk = data["chunk"]
+
+        if hasattr(chunk, 'content'):
+            text = f"{chunk.content}{getattr(chunk, 'additional_kwargs', {}).get('reasoning_content', '')}"
+        else:
+            text = str(chunk)
+
+    if data and "output" in data:
+        output = data["output"]
+        if hasattr(output, 'content'):
+            text = f"{output.content}{getattr(output, 'additional_kwargs', {}).get('reasoning_content', '')}"
+        else:
+            text = str(output)
+
+    if data and "messages" in data:
+        output = data["messages"]
+        if hasattr(output, 'content'):
+            text = f"{output.content}{getattr(output, 'additional_kwargs', {}).get('reasoning_content', '')}"
+        else:
+            text = str(output)
+
+    print(text, end='')
 
     return kind, data, name, node, langgraph_step, run_id
 
 
 def _process_event(
-    kind: str,
-    data: Dict[str, Any],
-    name: str,
-    node: str,
-    workflow_id: str,
-    langgraph_step: str,
-    run_id: str,
-    user_input_messages: List[Dict[str, Any]],
-    team_members: Optional[List[str]],
+        kind: str,
+        data: Dict[str, Any],
+        name: str,
+        node: str,
+        workflow_id: str,
+        langgraph_step: str,
+        run_id: str,
+        user_input_messages: List[Dict[str, Any]],
+        team_members: Optional[List[str]],
 ) -> Generator[Dict[str, Any], None, None]:
     """Process events and return corresponding output data"""
     # Handle chain start events
@@ -202,10 +225,10 @@ def _process_event(
 
 
 def _handle_chain_start(
-    name: str,
-    workflow_id: str,
-    langgraph_step: str,
-    user_input_messages: List[Dict[str, Any]],
+        name: str,
+        workflow_id: str,
+        langgraph_step: str,
+        user_input_messages: List[Dict[str, Any]],
 ) -> Generator[Dict[str, Any], None, None]:
     """Handle chain start events"""
     # If it's the planner, generate workflow start event
@@ -225,7 +248,7 @@ def _handle_chain_start(
 
 
 def _handle_chain_end(
-    name: str, workflow_id: str, langgraph_step: str
+        name: str, workflow_id: str, langgraph_step: str
 ) -> Generator[Dict[str, Any], None, None]:
     """Handle chain end events"""
     yield {
@@ -254,7 +277,7 @@ def _handle_chat_model_end(node: str) -> Generator[Dict[str, Any], None, None]:
 
 
 def _handle_chat_model_stream(
-    data: Dict[str, Any], node: str
+        data: Dict[str, Any], node: str
 ) -> Generator[Dict[str, Any], None, None]:
     """Handle chat model stream events"""
 
@@ -313,7 +336,7 @@ def _handle_tool_end(node, name, data, workflow_id, run_id):
 
 
 def _generate_final_events(
-    workflow_id: str, data: Dict[str, Any], is_workflow_triggered: bool
+        workflow_id: str, data: Dict[str, Any], is_workflow_triggered: bool
 ) -> Generator[Dict[str, Any], None, None]:
     """Generate workflow end events"""
     if is_workflow_triggered:

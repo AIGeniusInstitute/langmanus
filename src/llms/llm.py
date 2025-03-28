@@ -162,6 +162,7 @@ def _create_llm_use_env(
                 base_url=REASONING_BASE_URL,
                 api_key=REASONING_API_KEY,
             )
+
     elif llm_type == "basic":
         if BASIC_AZURE_DEPLOYMENT:
             print("===== use azure ====")
@@ -184,6 +185,29 @@ def _create_llm_use_env(
                 base_url=BASIC_BASE_URL,
                 api_key=BASIC_API_KEY,
             )
+    elif llm_type == "report":
+        if BASIC_AZURE_DEPLOYMENT:
+            print("===== use azure ====")
+            llm = create_azure_llm(
+                azure_deployment=BASIC_AZURE_DEPLOYMENT,
+                azure_endpoint=AZURE_API_BASE,
+                api_version=AZURE_API_VERSION,
+                api_key=AZURE_API_KEY,
+            )
+        elif is_litellm_model(BASIC_MODEL):
+            print("===== use litellm ====")
+            llm = create_litellm_model(
+                model=BASIC_MODEL,
+                base_url=BASIC_BASE_URL,
+                api_key=BASIC_API_KEY,
+            )
+        else:
+            llm = create_openai_llm(
+                model=BASIC_MODEL,
+                base_url=BASIC_BASE_URL,
+                api_key=BASIC_API_KEY,
+            )
+
     elif llm_type == "vision":
         if VL_AZURE_DEPLOYMENT:
             llm = create_azure_llm(
@@ -209,12 +233,16 @@ def _create_llm_use_env(
     return llm
 
 
+
+# conf.yaml
 def _create_llm_use_conf(llm_type: LLMType, conf: Dict[str, Any]) -> ChatLiteLLM:
     llm_type_map = {
         "reasoning": conf.get("REASONING_MODEL"),
         "basic": conf.get("BASIC_MODEL"),
         "vision": conf.get("VISION_MODEL"),
+        "report": conf.get("DEEKSEEK_V3_MODEL"),
     }
+
     llm_conf = llm_type_map.get(llm_type)
 
     print("============= _create_llm_use_conf ==============")

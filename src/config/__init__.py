@@ -59,7 +59,7 @@ TEAM_MEMBER_CONFIGRATIONS = {
             "Directly interacts with web pages, performing complex operations and interactions. "
             "You can also leverage `browser` to perform in-domain search, like Facebook, Instgram, Github, etc."
         ),
-        "is_optional": False,
+        "is_optional": True,
     },
     "reporter": {
         "name": "reporter",
