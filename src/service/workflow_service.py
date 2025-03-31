@@ -132,10 +132,8 @@ async def run_agent_workflow(
 
 
 class Command:
-    def __init__(self, update, goto):
+    def __init__(self, update):
         self.update = update
-        self.goto = goto
-
 
 def parse_content(data):
     text = ""
